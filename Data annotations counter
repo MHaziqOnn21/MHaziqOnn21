@@ -1,0 +1,66 @@
+import os
+import matplotlib
+
+matplotlib.use('TkAgg')  # Use the TkAgg backend
+import matplotlib.pyplot as plt
+import pandas as pd
+
+def count_annotations(folder_path):
+  class_reference = {}
+
+  # Check if 'classes.txt' exists in the folder
+  classes_file_path = os.path.join(folder_path, 'classes.txt')
+  if not os.path.exists(classes_file_path):
+      print("Error: 'classes.txt' not found in the specified folder.")
+      return
+
+  # Read class reference from 'classes.txt'
+  with open(classes_file_path, 'r') as classes_file:
+      class_lines = classes_file.readlines()
+      class_reference = {i: line.strip() for i, line in enumerate(class_lines)}
+
+  class_counts = {}
+
+  # Iterate through each file in the folder
+  for filename in os.listdir(folder_path):
+      if filename.endswith(".txt") and filename != 'classes.txt':
+          file_path = os.path.join(folder_path, filename)
+
+          # Open the text file and read lines
+          with open(file_path, 'r') as file:
+              lines = file.readlines()
+
+          # Count annotations per class in the current file
+          for line in lines:
+              parts = line.split()
+              if len(parts) >= 1:
+                  try:
+                      class_index = int(parts[0])
+                      class_name = class_reference.get(class_index, 'Unknown')
+                      class_counts[class_name] = class_counts.get(class_name, 0) + 1
+                  except ValueError:
+                      print(f"Ignoring invalid line in {filename}: {line}")
+
+  # Create a DataFrame for better visualization
+  df = pd.DataFrame(list(class_counts.items()), columns=['Class Name', 'Count'])
+
+  # Display the table
+  print("Annotation Counts per Class:")
+  print(df)
+
+  # Visualize the data on a bar graph with annotations
+  plt.bar(df['Class Name'], df['Count'])
+  plt.xlabel('Class Name')
+  plt.ylabel('Annotation Count')
+  plt.title('Annotation Counts per Class')
+
+  # Annotate each bar with its value
+  for i, value in enumerate(df['Count']):
+      plt.text(i, value + 0.1, str(value), ha='center', va='bottom', rotation=45)
+
+  plt.xticks(rotation=0, ha='right')
+  plt.show()
+
+# Provide the path to the folder containing text files
+folder_path = r"A:\HDR_AITeam\Data\Projects\Puspakom\Abnormality\Puspakom abnormality (Dataset A)"
+count_annotations(folder_path)
